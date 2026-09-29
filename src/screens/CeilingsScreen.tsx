@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardHeader: { marginBottom: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { fontWeight: '700', color: '#2c3e50' },
   spent: { color: '#7f8c8d', fontSize: 12, marginTop: 2 },
   row: { flexDirection: 'row', gap: 8 },

@@ -1,4 +1,5 @@
 import { SQLiteDatabase } from 'expo-sqlite';
+import { backfillSyncClocks } from './database';
 
 const SEED_FLAG = 'seeded_v1';
 
@@ -67,4 +68,5 @@ export async function seedIfNeeded(db: SQLiteDatabase): Promise<void> {
       [SEED_FLAG, '1'],
     );
   });
+  await backfillSyncClocks(db);
 }

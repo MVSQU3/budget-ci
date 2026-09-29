@@ -39,12 +39,32 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     setSnapshot(snap);
   }, []);
 
+  const applySnapshot = useCallback((snap: AppSnapshot) => {
+    setSnapshot(snap);
+    void (async () => {
+      try {
+        const { syncIfEnabled } = await import('../sync/engine');
+        await syncIfEnabled();
+        setSnapshot(await loadSnapshot());
+      } catch {
+        // L'écriture locale est déjà enregistrée.
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
         const snap = await initApp();
         setSnapshot(snap);
         setReady(true);
+        try {
+          const { syncIfEnabled } = await import('../sync/engine');
+          await syncIfEnabled();
+          setSnapshot(await loadSnapshot());
+        } catch {
+          // Hors-ligne ou synchro coupée : l'écran local reste affiché.
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
@@ -75,10 +95,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       monthKey,
       setMonthKey,
       refresh,
-      applySnapshot: setSnapshot,
+      applySnapshot,
       showMutationAlerts,
     }),
-    [ready, error, snapshot, monthKey, refresh, showMutationAlerts],
+    [ready, error, snapshot, monthKey, refresh, applySnapshot, showMutationAlerts],
   );
 
   return (

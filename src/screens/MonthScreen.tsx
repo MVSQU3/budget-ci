@@ -127,6 +127,12 @@ export function MonthScreen({ navigation }: Props) {
         >
           <Text>Plafonds</Text>
         </Pressable>
+        <Pressable
+          style={styles.secondaryBtn}
+          onPress={() => navigation.navigate('Synchronisation')}
+        >
+          <Text>Synchronisation</Text>
+        </Pressable>
       </View>
 
       <Text style={styles.sectionTitle}>Opérations du mois</Text>

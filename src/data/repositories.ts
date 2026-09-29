@@ -1,4 +1,5 @@
 import { getDb } from './database';
+import { nowIso } from '../sync/clock';
 import {
   Account,
   AlertState,
@@ -7,6 +8,15 @@ import {
   Operation,
   OperationType,
 } from '../domain/types';
+
+/** Horloge écrite par la synchro. Sans cet argument, l'écriture est locale et devient dirty. */
+export type SyncWrite = {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  dirty: boolean;
+  note?: string | null;
+};
 
 function boolFromInt(v: number): boolean {
   return v === 1;
@@ -19,7 +29,7 @@ export async function listAccounts(): Promise<Account[]> {
     name: string;
     opening_balance: number;
     archived: number;
-  }>('SELECT * FROM accounts ORDER BY name COLLATE NOCASE');
+  }>('SELECT * FROM accounts WHERE deleted_at IS NULL ORDER BY name COLLATE NOCASE');
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -28,18 +38,59 @@ export async function listAccounts(): Promise<Account[]> {
   }));
 }
 
-export async function upsertAccount(account: Account): Promise<void> {
+export async function upsertAccount(
+  account: Account,
+  clock?: SyncWrite,
+): Promise<void> {
   const db = await getDb();
+  const stamp = nowIso();
+  if (clock) {
+    await db.runAsync(
+      `INSERT INTO accounts (id, name, opening_balance, archived, created_at, updated_at, deleted_at, dirty)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         opening_balance = excluded.opening_balance,
+         archived = excluded.archived,
+         created_at = excluded.created_at,
+         updated_at = excluded.updated_at,
+         deleted_at = excluded.deleted_at,
+         dirty = excluded.dirty`,
+      [
+        account.id,
+        account.name,
+        account.openingBalance,
+        account.archived ? 1 : 0,
+        clock.createdAt,
+        clock.updatedAt,
+        clock.deletedAt,
+        clock.dirty ? 1 : 0,
+      ],
+    );
+    return;
+  }
   await db.runAsync(
-    `INSERT INTO accounts (id, name, opening_balance, archived) VALUES (?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET name = excluded.name, opening_balance = excluded.opening_balance, archived = excluded.archived`,
-    [account.id, account.name, account.openingBalance, account.archived ? 1 : 0],
+    `INSERT INTO accounts (id, name, opening_balance, archived, created_at, updated_at, deleted_at, dirty)
+     VALUES (?, ?, ?, ?, ?, ?, NULL, 1)
+     ON CONFLICT(id) DO UPDATE SET
+       name = excluded.name,
+       opening_balance = excluded.opening_balance,
+       archived = excluded.archived,
+       updated_at = excluded.updated_at,
+       deleted_at = NULL,
+       dirty = 1`,
+    [account.id, account.name, account.openingBalance, account.archived ? 1 : 0, stamp, stamp],
   );
 }
 
 export async function deleteAccount(id: string): Promise<void> {
   const db = await getDb();
-  await db.runAsync('DELETE FROM accounts WHERE id = ?', [id]);
+  const stamp = nowIso();
+  await db.runAsync(
+    `UPDATE accounts SET deleted_at = ?, updated_at = ?, dirty = 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [stamp, stamp, id],
+  );
 }
 
 export async function listCategories(): Promise<Category[]> {
@@ -51,7 +102,7 @@ export async function listCategories(): Promise<Category[]> {
     color: string;
     icon: string;
     active: number;
-  }>('SELECT * FROM categories ORDER BY type, name COLLATE NOCASE');
+  }>('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY type, name COLLATE NOCASE');
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -62,11 +113,53 @@ export async function listCategories(): Promise<Category[]> {
   }));
 }
 
-export async function upsertCategory(category: Category): Promise<void> {
+export async function upsertCategory(
+  category: Category,
+  clock?: SyncWrite,
+): Promise<void> {
   const db = await getDb();
+  const stamp = nowIso();
+  if (clock) {
+    await db.runAsync(
+      `INSERT INTO categories (id, name, type, color, icon, active, created_at, updated_at, deleted_at, dirty)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         name = excluded.name,
+         type = excluded.type,
+         color = excluded.color,
+         icon = excluded.icon,
+         active = excluded.active,
+         created_at = excluded.created_at,
+         updated_at = excluded.updated_at,
+         deleted_at = excluded.deleted_at,
+         dirty = excluded.dirty`,
+      [
+        category.id,
+        category.name,
+        category.type,
+        category.color,
+        category.icon,
+        category.active ? 1 : 0,
+        clock.createdAt,
+        clock.updatedAt,
+        clock.deletedAt,
+        clock.dirty ? 1 : 0,
+      ],
+    );
+    return;
+  }
   await db.runAsync(
-    `INSERT INTO categories (id, name, type, color, icon, active) VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET name = excluded.name, type = excluded.type, color = excluded.color, icon = excluded.icon, active = excluded.active`,
+    `INSERT INTO categories (id, name, type, color, icon, active, created_at, updated_at, deleted_at, dirty)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 1)
+     ON CONFLICT(id) DO UPDATE SET
+       name = excluded.name,
+       type = excluded.type,
+       color = excluded.color,
+       icon = excluded.icon,
+       active = excluded.active,
+       updated_at = excluded.updated_at,
+       deleted_at = NULL,
+       dirty = 1`,
     [
       category.id,
       category.name,
@@ -74,13 +167,20 @@ export async function upsertCategory(category: Category): Promise<void> {
       category.color,
       category.icon,
       category.active ? 1 : 0,
+      stamp,
+      stamp,
     ],
   );
 }
 
 export async function deleteCategory(id: string): Promise<void> {
   const db = await getDb();
-  await db.runAsync('DELETE FROM categories WHERE id = ?', [id]);
+  const stamp = nowIso();
+  await db.runAsync(
+    `UPDATE categories SET deleted_at = ?, updated_at = ?, dirty = 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [stamp, stamp, id],
+  );
 }
 
 export async function listOperations(): Promise<Operation[]> {
@@ -93,7 +193,7 @@ export async function listOperations(): Promise<Operation[]> {
     label: string;
     category_id: string;
     account_id: string;
-  }>('SELECT * FROM operations ORDER BY date DESC, id DESC');
+  }>('SELECT * FROM operations WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
   return rows.map((r) => ({
     id: r.id,
     type: r.type,
@@ -105,18 +205,72 @@ export async function listOperations(): Promise<Operation[]> {
   }));
 }
 
-export async function upsertOperation(op: Operation): Promise<void> {
+export async function upsertOperation(
+  op: Operation,
+  clock?: SyncWrite,
+): Promise<void> {
   const db = await getDb();
+  const stamp = nowIso();
+  if (clock) {
+    await db.runAsync(
+      `INSERT INTO operations (
+         id, type, amount, date, label, category_id, account_id, note, created_at, updated_at, deleted_at, dirty
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         type = excluded.type,
+         amount = excluded.amount,
+         date = excluded.date,
+         label = excluded.label,
+         category_id = excluded.category_id,
+         account_id = excluded.account_id,
+         note = excluded.note,
+         created_at = excluded.created_at,
+         updated_at = excluded.updated_at,
+         deleted_at = excluded.deleted_at,
+         dirty = excluded.dirty`,
+      [
+        op.id,
+        op.type,
+        op.amount,
+        op.date,
+        op.label,
+        op.categoryId,
+        op.accountId,
+        clock.note ?? '',
+        clock.createdAt,
+        clock.updatedAt,
+        clock.deletedAt,
+        clock.dirty ? 1 : 0,
+      ],
+    );
+    return;
+  }
   await db.runAsync(
-    `INSERT INTO operations (id, type, amount, date, label, category_id, account_id) VALUES (?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET type = excluded.type, amount = excluded.amount, date = excluded.date, label = excluded.label, category_id = excluded.category_id, account_id = excluded.account_id`,
-    [op.id, op.type, op.amount, op.date, op.label, op.categoryId, op.accountId],
+    `INSERT INTO operations (
+       id, type, amount, date, label, category_id, account_id, note, created_at, updated_at, deleted_at, dirty
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, NULL, 1)
+     ON CONFLICT(id) DO UPDATE SET
+       type = excluded.type,
+       amount = excluded.amount,
+       date = excluded.date,
+       label = excluded.label,
+       category_id = excluded.category_id,
+       account_id = excluded.account_id,
+       updated_at = excluded.updated_at,
+       deleted_at = NULL,
+       dirty = 1`,
+    [op.id, op.type, op.amount, op.date, op.label, op.categoryId, op.accountId, stamp, stamp],
   );
 }
 
 export async function deleteOperation(id: string): Promise<void> {
   const db = await getDb();
-  await db.runAsync('DELETE FROM operations WHERE id = ?', [id]);
+  const stamp = nowIso();
+  await db.runAsync(
+    `UPDATE operations SET deleted_at = ?, updated_at = ?, dirty = 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [stamp, stamp, id],
+  );
 }
 
 export async function listCeilings(monthKey?: string): Promise<MonthlyCeiling[]> {
