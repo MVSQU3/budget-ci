@@ -22,7 +22,11 @@
     },
     "plugins": [
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "syncApiBaseUrl": "https://budget-ci-sync.vercel.app"
+    }
   }
 }

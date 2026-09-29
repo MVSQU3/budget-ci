@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { SYNC_EPOCH } from '../sync/clock';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -62,7 +63,56 @@ async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
       value TEXT NOT NULL
     );
   `);
+  await ensureSyncColumns(db);
+  await backfillSyncClocks(db);
   return db;
+}
+
+const SYNC_TABLES = ['accounts', 'categories', 'operations'] as const;
+
+async function columnNames(
+  db: SQLite.SQLiteDatabase,
+  table: (typeof SYNC_TABLES)[number],
+): Promise<Set<string>> {
+  const rows = await db.getAllAsync<{ name: string }>(
+    `PRAGMA table_info(${table})`,
+  );
+  return new Set(rows.map((row) => row.name));
+}
+
+async function addColumn(
+  db: SQLite.SQLiteDatabase,
+  table: (typeof SYNC_TABLES)[number],
+  name: string,
+  definition: string,
+): Promise<void> {
+  const columns = await columnNames(db, table);
+  if (columns.has(name)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${definition}`);
+}
+
+/** Colonnes d'horloge pour la synchro. Invisibles tant que la synchro est coupée. */
+export async function ensureSyncColumns(db: SQLite.SQLiteDatabase): Promise<void> {
+  for (const table of SYNC_TABLES) {
+    await addColumn(db, table, 'created_at', 'created_at TEXT');
+    await addColumn(db, table, 'updated_at', 'updated_at TEXT');
+    await addColumn(db, table, 'deleted_at', 'deleted_at TEXT');
+    await addColumn(db, table, 'dirty', 'dirty INTEGER NOT NULL DEFAULT 0');
+  }
+  await addColumn(db, 'operations', 'note', 'note TEXT');
+}
+
+export async function backfillSyncClocks(db: SQLite.SQLiteDatabase): Promise<void> {
+  for (const table of SYNC_TABLES) {
+    await db.runAsync(
+      `UPDATE ${table} SET created_at = ? WHERE created_at IS NULL OR created_at = ''`,
+      [SYNC_EPOCH],
+    );
+    await db.runAsync(
+      `UPDATE ${table} SET updated_at = ? WHERE updated_at IS NULL OR updated_at = ''`,
+      [SYNC_EPOCH],
+    );
+  }
 }
 
 /** Réinitialise le singleton (tests / hot reload). */

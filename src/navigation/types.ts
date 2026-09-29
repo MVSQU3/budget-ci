@@ -4,4 +4,6 @@ export type RootStackParamList = {
   Comptes: undefined;
   Categories: undefined;
   Plafonds: undefined;
+  Synchronisation: undefined;
+  Rejoindre: undefined;
 };
