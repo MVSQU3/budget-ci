@@ -15,6 +15,7 @@ import { AmountText } from '../components/AmountText';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { formatDateFr } from '../domain/dates';
 import { RootStackParamList } from '../navigation/types';
+import { colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Mois'>;
 
@@ -183,7 +184,7 @@ export function MonthScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9fb', padding: 12 },
+  container: { flex: 1, backgroundColor: colors.bg, padding: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   error: { color: '#c0392b', padding: 16 },
   monthNav: {
@@ -193,31 +194,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   navBtn: { padding: 10 },
-  navBtnText: { fontSize: 28, color: '#2980b9' },
+  navBtnText: { fontSize: 28, color: colors.accent },
   monthTitle: {
     fontSize: 20,
     fontWeight: '700',
     textTransform: 'capitalize',
-    color: '#2c3e50',
+    color: colors.text,
   },
   summary: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     gap: 6,
   },
   summaryItem: { flex: 1 },
-  summaryLabel: { fontSize: 12, color: '#7f8c8d', marginBottom: 4 },
+  summaryLabel: { fontSize: 12, color: colors.muted, marginBottom: 4 },
   sectionTitle: {
     fontWeight: '700',
     marginTop: 8,
     marginBottom: 6,
-    color: '#2c3e50',
+    color: colors.text,
   },
   accountsBox: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 8,
   },
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 4,
   },
-  accountName: { color: '#34495e' },
+  accountName: { color: colors.text },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -234,27 +235,27 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   primaryBtn: {
-    backgroundColor: '#2980b9',
+    backgroundColor: colors.accent,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  primaryBtnText: { color: '#fff', fontWeight: '700' },
+  primaryBtnText: { color: colors.onAccent, fontWeight: '700' },
   secondaryBtn: {
-    backgroundColor: '#ecf0f1',
+    backgroundColor: colors.chip,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
   },
   opRow: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 8,
     marginBottom: 6,
     alignItems: 'center',
   },
-  opLabel: { fontWeight: '600', color: '#2c3e50' },
-  opMeta: { fontSize: 12, color: '#7f8c8d', marginTop: 2 },
-  empty: { color: '#95a5a6', fontStyle: 'italic', padding: 12 },
+  opLabel: { fontWeight: '600', color: colors.text },
+  opMeta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  empty: { color: colors.muted, fontStyle: 'italic', padding: 12 },
 });

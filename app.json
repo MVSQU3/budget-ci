@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#f5ead8"
     },
     "android": {
       "package": "com.kevin.budgetci",

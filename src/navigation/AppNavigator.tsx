@@ -9,13 +9,21 @@ import { CeilingsScreen } from '../screens/CeilingsScreen';
 import { SyncJoinScreen } from '../screens/SyncJoinScreen';
 import { SyncScreen } from '../screens/SyncScreen';
 import { RootStackParamList } from './types';
+import { colors } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.bg },
+          headerTintColor: colors.accent,
+          headerTitleStyle: { color: colors.text },
+          contentStyle: { backgroundColor: colors.bg },
+        }}
+      >
         <Stack.Screen
           name="Mois"
           component={MonthScreen}
@@ -44,22 +52,12 @@ export function AppNavigator() {
         <Stack.Screen
           name="Synchronisation"
           component={SyncScreen}
-          options={{
-            title: 'Synchronisation',
-            headerStyle: { backgroundColor: '#F5F7FF' },
-            headerTintColor: '#4338CA',
-            contentStyle: { backgroundColor: '#F5F7FF' },
-          }}
+          options={{ title: 'Synchronisation' }}
         />
         <Stack.Screen
           name="Rejoindre"
           component={SyncJoinScreen}
-          options={{
-            title: 'Rejoindre',
-            headerStyle: { backgroundColor: '#F5F7FF' },
-            headerTintColor: '#4338CA',
-            contentStyle: { backgroundColor: '#F5F7FF' },
-          }}
+          options={{ title: 'Rejoindre' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -135,8 +135,8 @@ function ActivationView({
                 'Confirmez le code, puis appuyez sur Connecter.',
               )
             }
-            trackColor={{ false: '#E2E8F0', true: '#C7D2FE' }}
-            thumbColor="#94A3B8"
+            trackColor={{ false: syncColors.switchTrackOff, true: syncColors.switchTrackOn }}
+            thumbColor={syncColors.switchThumbOff}
           />
         </View>
         <Text style={styles.help}>
@@ -298,7 +298,7 @@ function EnabledView({
           <Switch
             value
             onValueChange={() => onDisable()}
-            trackColor={{ false: '#E2E8F0', true: '#C7D2FE' }}
+            trackColor={{ false: syncColors.switchTrackOff, true: syncColors.switchTrackOn }}
             thumbColor={syncColors.primary}
           />
         </View>
@@ -464,9 +464,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
-  primaryText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  primaryText: { color: syncColors.onPrimary, fontWeight: '700', fontSize: 16 },
   secondaryBtn: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: syncColors.secondary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

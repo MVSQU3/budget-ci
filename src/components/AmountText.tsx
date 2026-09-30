@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, TextStyle } from 'react-native';
 import { formatXof } from '../utils/format';
+import { colors } from '../theme';
 
 export function AmountText({
   value,
@@ -13,12 +14,12 @@ export function AmountText({
 }) {
   const color =
     tone === 'income'
-      ? '#1e8449'
+      ? colors.successText
       : tone === 'expense'
         ? '#c0392b'
         : tone === 'danger'
           ? '#922b21'
-          : '#2c3e50';
+          : colors.text;
   return (
     <Text style={[styles.text, { color }, style]}>{formatXof(value)}</Text>
   );

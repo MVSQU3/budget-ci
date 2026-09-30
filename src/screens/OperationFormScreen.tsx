@@ -28,6 +28,7 @@ import {
 import { OperationType } from '../domain/types';
 import { RootStackParamList } from '../navigation/types';
 import { CategoryBadge } from '../components/CategoryBadge';
+import { colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OperationForm'>;
 
@@ -170,6 +171,7 @@ export function OperationFormScreen({ navigation, route }: Props) {
         value={amount}
         onChangeText={setAmount}
         placeholder="ex. 5000"
+        placeholderTextColor={colors.muted}
       />
 
       <Text style={styles.label}>Date</Text>
@@ -194,6 +196,7 @@ export function OperationFormScreen({ navigation, route }: Props) {
         value={label}
         onChangeText={setLabel}
         placeholder="Description"
+        placeholderTextColor={colors.muted}
       />
 
       <Text style={styles.label}>Catégorie</Text>
@@ -258,22 +261,23 @@ export function OperationFormScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9fb' },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 12, color: '#2c3e50' },
-  label: { marginTop: 10, marginBottom: 4, color: '#7f8c8d', fontWeight: '600' },
+  container: { flex: 1, backgroundColor: colors.bg },
+  title: { fontSize: 20, fontWeight: '700', marginBottom: 12, color: colors.text },
+  label: { marginTop: 10, marginBottom: 4, color: colors.muted, fontWeight: '600' },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#dfe6e9',
+    borderColor: colors.divider,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    color: colors.text,
   },
-  dateText: { color: '#2c3e50', fontSize: 16 },
+  dateText: { color: colors.text, fontSize: 16 },
   row: { flexDirection: 'row', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    backgroundColor: '#ecf0f1',
+    backgroundColor: colors.chip,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
@@ -283,17 +287,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  chipActive: { backgroundColor: '#3498db' },
-  chipTextActive: { color: '#fff', fontWeight: '700' },
+  chipActive: { backgroundColor: colors.accent },
+  chipTextActive: { color: colors.onAccent, fontWeight: '700' },
   chipDisabled: { opacity: 0.5 },
   saveBtn: {
     marginTop: 20,
-    backgroundColor: '#27ae60',
+    backgroundColor: colors.success,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
   },
-  saveText: { color: '#fff', fontWeight: '700' },
+  saveText: { color: colors.onAccent, fontWeight: '700' },
   deleteBtn: {
     marginTop: 12,
     padding: 14,

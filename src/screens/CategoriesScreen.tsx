@@ -17,6 +17,7 @@ import {
 } from '../services/BudgetService';
 import { OperationType } from '../domain/types';
 import { CategoryBadge } from '../components/CategoryBadge';
+import { colors } from '../theme';
 
 const COLORS = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#7f8c8d'];
 
@@ -57,6 +58,7 @@ export function CategoriesScreen() {
       <TextInput
         style={styles.input}
         placeholder="Nom de la catégorie"
+        placeholderTextColor={colors.muted}
         value={name}
         onChangeText={setName}
       />
@@ -69,6 +71,7 @@ export function CategoriesScreen() {
           <TextInput
             style={styles.input}
             value={editing.value}
+            placeholderTextColor={colors.muted}
             onChangeText={(v) => setEditing({ ...editing, value: v })}
           />
           <Pressable
@@ -159,42 +162,43 @@ export function CategoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: '#f7f9fb' },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
+  container: { flex: 1, padding: 12, backgroundColor: colors.bg },
+  title: { fontSize: 20, fontWeight: '700', marginBottom: 8, color: colors.text },
   row: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   chip: {
-    backgroundColor: '#ecf0f1',
+    backgroundColor: colors.chip,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
   },
-  chipActive: { backgroundColor: '#3498db' },
+  chipActive: { backgroundColor: colors.accent },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#dfe6e9',
+    borderColor: colors.divider,
     padding: 10,
     marginBottom: 8,
+    color: colors.text,
   },
   addBtn: {
-    backgroundColor: '#2980b9',
+    backgroundColor: colors.accent,
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 12,
   },
-  addText: { color: '#fff', fontWeight: '700' },
+  addText: { color: colors.onAccent, fontWeight: '700' },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 8,
     marginBottom: 6,
     gap: 8,
   },
   dot: { width: 12, height: 12, borderRadius: 6 },
-  name: { fontWeight: '600' },
-  meta: { fontSize: 12, color: '#7f8c8d' },
+  name: { fontWeight: '600', color: colors.text },
+  meta: { fontSize: 12, color: colors.muted },
 });
