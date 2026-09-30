@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { SYNC_EPOCH } from '../sync/clock';
+import { sqlBeforeSyncEpoch, SYNC_EPOCH } from '../sync/clock';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -105,12 +105,12 @@ export async function ensureSyncColumns(db: SQLite.SQLiteDatabase): Promise<void
 export async function backfillSyncClocks(db: SQLite.SQLiteDatabase): Promise<void> {
   for (const table of SYNC_TABLES) {
     await db.runAsync(
-      `UPDATE ${table} SET created_at = ? WHERE created_at IS NULL OR created_at = ''`,
-      [SYNC_EPOCH],
+      `UPDATE ${table} SET created_at = ? WHERE ${sqlBeforeSyncEpoch('created_at')}`,
+      [SYNC_EPOCH, SYNC_EPOCH],
     );
     await db.runAsync(
-      `UPDATE ${table} SET updated_at = ? WHERE updated_at IS NULL OR updated_at = ''`,
-      [SYNC_EPOCH],
+      `UPDATE ${table} SET updated_at = ? WHERE ${sqlBeforeSyncEpoch('updated_at')}`,
+      [SYNC_EPOCH, SYNC_EPOCH],
     );
   }
 }

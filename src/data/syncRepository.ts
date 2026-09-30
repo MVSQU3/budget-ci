@@ -1,3 +1,4 @@
+import { sqlBeforeSyncEpoch, SYNC_EPOCH } from '../sync/clock';
 import { getDb } from './database';
 import { upsertAccount, upsertCategory, upsertOperation } from './repositories';
 import {
@@ -49,8 +50,15 @@ export async function restampVisibleRows(updatedAt: string): Promise<void> {
   const db = await getDb();
   for (const table of TABLES) {
     await db.runAsync(
-      `UPDATE ${table} SET updated_at = ?, dirty = 1 WHERE deleted_at IS NULL`,
-      [updatedAt],
+      `UPDATE ${table}
+       SET updated_at = ?,
+           created_at = CASE
+             WHEN ${sqlBeforeSyncEpoch('created_at')} THEN ?
+             ELSE created_at
+           END,
+           dirty = 1
+       WHERE deleted_at IS NULL`,
+      [updatedAt, SYNC_EPOCH, SYNC_EPOCH],
     );
   }
 }
