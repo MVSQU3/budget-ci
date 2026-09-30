@@ -13,6 +13,7 @@ import { getMonthView, setCeiling } from '../services/BudgetService';
 import { formatMonthLabel } from '../domain/dates';
 import { formatXof } from '../utils/format';
 import { CategoryBadge } from '../components/CategoryBadge';
+import { colors } from '../theme';
 
 export function CeilingsScreen() {
   const { snapshot, monthKey, applySnapshot } = useBudget();
@@ -83,6 +84,7 @@ export function CeilingsScreen() {
                   style={styles.input}
                   keyboardType="number-pad"
                   placeholder="Plafond F CFA"
+                  placeholderTextColor={colors.muted}
                   value={current}
                   onChangeText={(v) =>
                     setDrafts((d) => ({ ...d, [item.id]: v }))
@@ -104,33 +106,34 @@ export function CeilingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: '#f7f9fb' },
-  title: { fontSize: 20, fontWeight: '700', textTransform: 'capitalize' },
-  hint: { color: '#7f8c8d', marginVertical: 8, fontSize: 13 },
+  container: { flex: 1, padding: 12, backgroundColor: colors.bg },
+  title: { fontSize: 20, fontWeight: '700', textTransform: 'capitalize', color: colors.text },
+  hint: { color: colors.muted, marginVertical: 8, fontSize: 13 },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
   },
   cardHeader: { marginBottom: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontWeight: '700', color: '#2c3e50' },
-  spent: { color: '#7f8c8d', fontSize: 12, marginTop: 2 },
+  name: { fontWeight: '700', color: colors.text },
+  spent: { color: colors.muted, fontSize: 12, marginTop: 2 },
   row: { flexDirection: 'row', gap: 8 },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#dfe6e9',
+    borderColor: colors.divider,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
+    color: colors.text,
   },
   saveBtn: {
-    backgroundColor: '#27ae60',
+    backgroundColor: colors.success,
     paddingHorizontal: 16,
     justifyContent: 'center',
     borderRadius: 8,
   },
-  saveText: { color: '#fff', fontWeight: '700' },
+  saveText: { color: colors.onAccent, fontWeight: '700' },
 });

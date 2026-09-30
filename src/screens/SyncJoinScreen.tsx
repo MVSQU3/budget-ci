@@ -129,9 +129,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  primaryText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  primaryText: { color: syncColors.onPrimary, fontWeight: '700', fontSize: 16 },
   secondaryBtn: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: syncColors.secondary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
