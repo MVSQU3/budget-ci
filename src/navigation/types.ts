@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   Mois: undefined;
-  OperationForm: { operationId?: string };
+  Operations: undefined;
+  OperationForm: { operationId?: string; type?: 'revenu' | 'depense' };
   Comptes: undefined;
   Categories: undefined;
   Plafonds: undefined;

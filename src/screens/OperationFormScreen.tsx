@@ -35,10 +35,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'OperationForm'>;
 export function OperationFormScreen({ navigation, route }: Props) {
   const { snapshot, applySnapshot, showMutationAlerts } = useBudget();
   const existing = snapshot?.operations.find(
-    (o) => o.id === route.params.operationId,
+    (o) => o.id === route.params?.operationId,
   );
 
-  const [type, setType] = useState<OperationType>(existing?.type ?? 'depense');
+  const [type, setType] = useState<OperationType>(
+    existing?.type ?? route.params?.type ?? 'depense',
+  );
   const [amount, setAmount] = useState(existing ? String(existing.amount) : '');
   const [date, setDate] = useState(existing?.date ?? todayISO());
   const [label, setLabel] = useState(existing?.label ?? '');
