@@ -26,6 +26,10 @@ export interface Operation {
   label: string;
   categoryId: string;
   accountId: string;
+  /** Note de synchro. Vide pour une saisie locale : le libellé tient ce rôle. */
+  note?: string | null;
+  /** Horodatage de création ISO, quand il est connu. */
+  createdAt?: string | null;
 }
 
 export interface MonthlyCeiling {

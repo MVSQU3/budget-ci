@@ -33,7 +33,7 @@ export function AppNavigator() {
         <Stack.Screen
           name="Operations"
           component={OperationsScreen}
-          options={{ title: 'Opérations du mois' }}
+          options={{ title: 'Transactions' }}
         />
         <Stack.Screen
           name="OperationForm"
