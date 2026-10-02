@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chip,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 8,
   },
   chipSelected: { backgroundColor: colors.accent },
   chipText: { color: colors.text },
