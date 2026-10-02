@@ -29,6 +29,10 @@ import { OperationType } from '../domain/types';
 import { RootStackParamList } from '../navigation/types';
 import { CategoryBadge } from '../components/CategoryBadge';
 import { colors } from '../theme';
+import { formatXof } from '../utils/format';
+
+/** Rouge dépense déjà utilisé par les montants ; revenu = vert Organic (accent 2). */
+const EXPENSE_COLOR = '#c0392b';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OperationForm'>;
 
@@ -142,115 +146,139 @@ export function OperationFormScreen({ navigation, route }: Props) {
     ]);
   };
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.title}>
-        {existing ? 'Modifier l’opération' : 'Nouvelle opération'}
-      </Text>
+  const amountDisplay = amount ? formatXof(Number(amount)).replace(/ F CFA$/, '') : '';
+  const amountInputWidth = Math.max(40, (amountDisplay || '0').length * 24);
+  const ctaLabel = existing
+    ? 'Enregistrer'
+    : type === 'depense'
+      ? 'Ajouter la dépense'
+      : 'Ajouter le revenu';
+  const ctaColor = type === 'depense' ? EXPENSE_COLOR : colors.success;
 
-      <Text style={styles.label}>Type</Text>
-      <View style={styles.row}>
-        {(['depense', 'revenu'] as OperationType[]).map((t) => (
-          <Pressable
-            key={t}
-            style={[styles.chip, type === t && styles.chipActive]}
-            onPress={() => {
-              setType(t);
-              setCategoryId('');
-            }}
-          >
-            <Text style={type === t ? styles.chipTextActive : undefined}>
-              {t === 'depense' ? 'Dépense' : 'Revenu'}
-            </Text>
-          </Pressable>
-        ))}
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.segment} accessibilityRole="tablist">
+        {(['depense', 'revenu'] as OperationType[]).map((t) => {
+          const selected = type === t;
+          return (
+            <Pressable
+              key={t}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              style={[styles.segmentItem, selected && styles.segmentItemActive]}
+              onPress={() => {
+                setType(t);
+                setCategoryId('');
+              }}
+            >
+              <Text style={selected ? styles.segmentTextActive : styles.segmentText}>
+                {t === 'depense' ? 'Dépense' : 'Revenu'}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={styles.label}>Montant (F CFA entier)</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="number-pad"
-        value={amount}
-        onChangeText={setAmount}
-        placeholder="ex. 5000"
-        placeholderTextColor={colors.muted}
-      />
+      <View style={styles.amountBlock}>
+        <View style={styles.amountLine}>
+          <TextInput
+            style={[styles.amountInput, { width: amountInputWidth }]}
+            keyboardType="number-pad"
+            value={amountDisplay}
+            onChangeText={(text) => setAmount(text.replace(/\D/g, ''))}
+            placeholder="0"
+            placeholderTextColor={colors.muted}
+            textAlign="right"
+            accessibilityLabel="Montant en FCFA"
+          />
+          <Text style={styles.amountUnit}>FCFA</Text>
+        </View>
+      </View>
 
-      <Text style={styles.label}>Date</Text>
-      <Pressable
-        style={styles.input}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={styles.dateText}>{formatDateFr(date)}</Text>
-      </Pressable>
-      {showDatePicker ? (
-        <DateTimePicker
-          value={parseISODateLocal(date)}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
+      <View style={styles.categories}>
+        <Text style={styles.categoryLabel}>Catégorie</Text>
+        <View style={styles.wrap}>
+          {categories
+            .filter((c) => c.active || c.id === categoryId)
+            .map((c) => (
+              <Pressable
+                key={c.id}
+                style={[
+                  styles.chip,
+                  styles.catChip,
+                  categoryId === c.id && styles.chipActive,
+                  !c.active && styles.chipDisabled,
+                ]}
+                onPress={() => c.active && setCategoryId(c.id)}
+              >
+                <CategoryBadge color={c.color} icon={c.icon} size={10} />
+                <Text style={categoryId === c.id ? styles.chipTextActive : undefined}>
+                  {c.name}
+                  {!c.active ? ' (désactivée)' : ''}
+                </Text>
+              </Pressable>
+            ))}
+        </View>
+      </View>
+
+      <View style={styles.lower}>
+        <Text style={styles.label}>Date</Text>
+        <Pressable
+          style={styles.input}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateText}>{formatDateFr(date)}</Text>
+        </Pressable>
+        {showDatePicker ? (
+          <DateTimePicker
+            value={parseISODateLocal(date)}
+            mode="date"
+            display="default"
+            onChange={onDateChange}
+          />
+        ) : null}
+
+        <Text style={styles.label}>Libellé</Text>
+        <TextInput
+          style={styles.input}
+          value={label}
+          onChangeText={setLabel}
+          placeholder="Description"
+          placeholderTextColor={colors.muted}
         />
-      ) : null}
 
-      <Text style={styles.label}>Libellé</Text>
-      <TextInput
-        style={styles.input}
-        value={label}
-        onChangeText={setLabel}
-        placeholder="Description"
-        placeholderTextColor={colors.muted}
-      />
-
-      <Text style={styles.label}>Catégorie</Text>
-      <View style={styles.wrap}>
-        {categories
-          .filter((c) => c.active || c.id === categoryId)
-          .map((c) => (
+        <Text style={styles.label}>Compte</Text>
+        <View style={styles.wrap}>
+          {accounts.map((a) => (
             <Pressable
-              key={c.id}
+              key={a.id}
               style={[
                 styles.chip,
-                styles.catChip,
-                categoryId === c.id && styles.chipActive,
-                !c.active && styles.chipDisabled,
+                accountId === a.id && styles.chipActive,
+                a.archived && styles.chipDisabled,
               ]}
-              onPress={() => c.active && setCategoryId(c.id)}
+              onPress={() => !a.archived && setAccountId(a.id)}
             >
-              <CategoryBadge color={c.color} icon={c.icon} size={10} />
-              <Text>
-                {c.name}
-                {!c.active ? ' (désactivée)' : ''}
+              <Text style={accountId === a.id ? styles.chipTextActive : undefined}>
+                {a.name}
+                {a.archived ? ' (archivé)' : ''}
               </Text>
             </Pressable>
           ))}
-      </View>
-
-      <Text style={styles.label}>Compte</Text>
-      <View style={styles.wrap}>
-        {accounts.map((a) => (
-          <Pressable
-            key={a.id}
-            style={[
-              styles.chip,
-              accountId === a.id && styles.chipActive,
-              a.archived && styles.chipDisabled,
-            ]}
-            onPress={() => !a.archived && setAccountId(a.id)}
-          >
-            <Text>
-              {a.name}
-              {a.archived ? ' (archivé)' : ''}
-            </Text>
-          </Pressable>
-        ))}
+        </View>
       </View>
 
       <Pressable
-        style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+        style={[styles.saveBtn, { backgroundColor: ctaColor }, saving && { opacity: 0.6 }]}
         onPress={onSave}
         disabled={saving}
+        accessibilityRole="button"
       >
-        <Text style={styles.saveText}>Enregistrer</Text>
+        <Text style={styles.saveText}>{ctaLabel}</Text>
       </Pressable>
 
       {existing ? (
@@ -264,7 +292,64 @@ export function OperationFormScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  title: { fontSize: 20, fontWeight: '700', marginBottom: 12, color: colors.text },
+  content: {
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    padding: 4,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  segmentItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  segmentItemActive: { backgroundColor: colors.accent },
+  segmentText: { color: colors.text, fontWeight: '600' },
+  segmentTextActive: { color: colors.onAccent, fontWeight: '700' },
+  amountBlock: {
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  amountLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  amountInput: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.text,
+    paddingVertical: 4,
+    paddingHorizontal: 0,
+    includeFontPadding: false,
+  },
+  amountUnit: {
+    marginLeft: 8,
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  categories: {
+    paddingVertical: 0,
+    paddingHorizontal: 20,
+  },
+  categoryLabel: {
+    marginTop: 0,
+    marginBottom: 8,
+    color: colors.muted,
+    fontWeight: '600',
+  },
   label: { marginTop: 10, marginBottom: 4, color: colors.muted, fontWeight: '600' },
   input: {
     backgroundColor: colors.surface,
@@ -276,7 +361,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   dateText: { color: colors.text, fontSize: 16 },
-  row: { flexDirection: 'row', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     backgroundColor: colors.chip,
@@ -293,15 +377,20 @@ const styles = StyleSheet.create({
   chipTextActive: { color: colors.onAccent, fontWeight: '700' },
   chipDisabled: { opacity: 0.5 },
   saveBtn: {
-    marginTop: 20,
-    backgroundColor: colors.success,
+    marginTop: 6,
+    marginHorizontal: 20,
+    marginBottom: 26,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
   },
   saveText: { color: colors.onAccent, fontWeight: '700' },
+  lower: {
+    paddingHorizontal: 20,
+  },
   deleteBtn: {
     marginTop: 12,
+    marginHorizontal: 20,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
