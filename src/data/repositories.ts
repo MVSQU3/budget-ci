@@ -193,6 +193,8 @@ export async function listOperations(): Promise<Operation[]> {
     label: string;
     category_id: string;
     account_id: string;
+    note: string | null;
+    created_at: string | null;
   }>('SELECT * FROM operations WHERE deleted_at IS NULL ORDER BY date DESC, id DESC');
   return rows.map((r) => ({
     id: r.id,
@@ -202,6 +204,8 @@ export async function listOperations(): Promise<Operation[]> {
     label: r.label,
     categoryId: r.category_id,
     accountId: r.account_id,
+    note: r.note,
+    createdAt: r.created_at,
   }));
 }
 

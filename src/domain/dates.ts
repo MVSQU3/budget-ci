@@ -59,3 +59,10 @@ export function toISODate(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+/** Décale un jour ISO de `deltaDays` jours calendaires (fuseau local). */
+export function shiftISODate(isoDate: string, deltaDays: number): string {
+  const date = parseISODateLocal(isoDate);
+  date.setDate(date.getDate() + deltaDays);
+  return toISODate(date);
+}

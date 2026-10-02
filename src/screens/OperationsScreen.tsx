@@ -1,25 +1,60 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, SectionList, Pressable, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useBudget } from '../context/BudgetContext';
 import { getMonthView } from '../services/BudgetService';
-import { shiftMonth } from '../domain/dates';
-import { isCeilingExceeded, sortOperationsDesc } from '../domain/accueil';
-import { MonthSwitcher } from '../components/MonthSwitcher';
+import { toMonthKey } from '../domain/dates';
+import { isCeilingExceeded } from '../domain/accueil';
+import {
+  filterOperationsByPeriod,
+  formatTransactionSubline,
+  groupOperationsByDay,
+  TransactionPeriod,
+} from '../domain/transactions';
 import { OperationRow } from '../components/OperationRow';
+import { Operation } from '../domain/types';
 import { RootStackParamList } from '../navigation/types';
 import { colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Operations'>;
 
-/** Liste complète des opérations du mois, retirée de l’Accueil. */
-export function OperationsScreen({ navigation }: Props) {
-  const { snapshot, monthKey, setMonthKey, ready, error } = useBudget();
+const FILTERS: { id: TransactionPeriod; label: string }[] = [
+  { id: 'all', label: 'Tout' },
+  { id: 'today', label: 'Aujourd’hui' },
+  { id: 'days7', label: '7 jours' },
+  { id: 'month', label: 'Ce mois' },
+];
 
-  const view = useMemo(() => {
-    if (!snapshot) return null;
-    return getMonthView(snapshot, monthKey);
-  }, [snapshot, monthKey]);
+/** Liste des transactions, groupée par jour selon la pastille active. */
+export function OperationsScreen({ navigation }: Props) {
+  const { snapshot, ready, error } = useBudget();
+  const [period, setPeriod] = useState<TransactionPeriod>('month');
+
+  const filtered = useMemo(() => {
+    if (!snapshot) return [];
+    return filterOperationsByPeriod(snapshot.operations, period);
+  }, [snapshot, period]);
+
+  const sections = useMemo(
+    () =>
+      groupOperationsByDay(filtered).map((group) => ({
+        date: group.date,
+        label: group.label,
+        data: group.items,
+      })),
+    [filtered],
+  );
+
+  const ceilingByMonth = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof getMonthView>['ceilingStatuses']>();
+    if (!snapshot) return map;
+    for (const operation of filtered) {
+      const month = toMonthKey(operation.date);
+      if (map.has(month)) continue;
+      map.set(month, getMonthView(snapshot, month).ceilingStatuses);
+    }
+    return map;
+  }, [snapshot, filtered]);
 
   if (error) {
     return (
@@ -28,7 +63,7 @@ export function OperationsScreen({ navigation }: Props) {
       </View>
     );
   }
-  if (!ready || !snapshot || !view) {
+  if (!ready || !snapshot) {
     return (
       <View style={styles.center}>
         <Text>Chargement…</Text>
@@ -38,47 +73,108 @@ export function OperationsScreen({ navigation }: Props) {
 
   const catById = Object.fromEntries(snapshot.categories.map((c) => [c.id, c]));
   const accById = Object.fromEntries(snapshot.accounts.map((a) => [a.id, a]));
-  const operations = sortOperationsDesc(view.operations);
 
   return (
     <View style={styles.container}>
-      <MonthSwitcher
-        monthKey={monthKey}
-        onPrevious={() => setMonthKey(shiftMonth(monthKey, -1))}
-        onNext={() => setMonthKey(shiftMonth(monthKey, 1))}
-      />
-      <FlatList
-        data={operations}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipRow}
+        contentContainerStyle={styles.chips}
+      >
+        {FILTERS.map((filter) => {
+          const selected = period === filter.id;
+          return (
+            <Pressable
+              key={filter.id}
+              onPress={() => setPeriod(filter.id)}
+              style={[styles.chip, selected && styles.chipSelected]}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+            >
+              <Text style={selected ? styles.chipTextSelected : styles.chipText}>
+                {filter.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
+        stickySectionHeadersEnabled={false}
+        style={styles.sectionList}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.empty}>Aucune opération ce mois-ci.</Text>
+          <Text style={styles.empty}>Aucune transaction sur cette période.</Text>
         }
-        renderItem={({ item }) => (
-          <OperationRow
-            operation={item}
-            category={catById[item.categoryId]}
-            accountName={accById[item.accountId]?.name}
-            exceeded={isCeilingExceeded(item, view.ceilingStatuses)}
-            onPress={() =>
-              navigation.navigate('OperationForm', { operationId: item.id })
-            }
-          />
+        renderSectionHeader={({ section }) => (
+          <Text style={styles.sectionLabel}>{section.label}</Text>
         )}
+        renderItem={({ item, index, section }) => {
+          const category = catById[item.categoryId];
+          const inactive = category && !category.active ? ' (cat. désactivée)' : '';
+          return (
+            <OperationRow
+              operation={item}
+              category={category}
+              accountName={accById[item.accountId]?.name}
+              exceeded={isCeilingExceeded(
+                item,
+                ceilingByMonth.get(toMonthKey(item.date)) ?? [],
+              )}
+              heading={`${category?.name ?? 'Sans catégorie'}${inactive}`}
+              detail={transactionDetail(item, accById[item.accountId]?.name)}
+              style={{
+                marginBottom: index === section.data.length - 1 ? 0 : 12,
+              }}
+              onPress={() =>
+                navigation.navigate('OperationForm', { operationId: item.id })
+              }
+            />
+          );
+        }}
       />
     </View>
   );
+}
+
+function transactionDetail(operation: Operation, accountName?: string): string {
+  return formatTransactionSubline({
+    createdAt: operation.createdAt,
+    note: operation.note,
+    label: operation.label,
+    accountName,
+  });
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
-    paddingHorizontal: 20,
+    paddingHorizontal: 14,
     paddingTop: 12,
   },
-  list: { paddingTop: 12, paddingBottom: 20 },
+  chipRow: { flexGrow: 0 },
+  chips: { gap: 8 },
+  chip: {
+    backgroundColor: colors.chip,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  chipSelected: { backgroundColor: colors.accent },
+  chipText: { color: colors.text },
+  chipTextSelected: { color: colors.onAccent, fontWeight: '700' },
+  sectionList: { flex: 1 },
+  list: { paddingBottom: 14 },
+  sectionLabel: {
+    marginTop: 18,
+    marginBottom: 9,
+    fontWeight: '700',
+    color: colors.text,
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   error: { color: '#c0392b', padding: 16 },
-  empty: { color: colors.muted, fontStyle: 'italic', padding: 12 },
+  empty: { color: colors.muted, fontStyle: 'italic', marginTop: 18, padding: 12 },
 });
