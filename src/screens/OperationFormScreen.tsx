@@ -225,15 +225,6 @@ export function OperationFormScreen({ navigation, route }: Props) {
         </View>
       </View>
 
-      <Pressable
-        style={[styles.saveBtn, { backgroundColor: ctaColor }, saving && { opacity: 0.6 }]}
-        onPress={onSave}
-        disabled={saving}
-        accessibilityRole="button"
-      >
-        <Text style={styles.saveText}>{ctaLabel}</Text>
-      </Pressable>
-
       <View style={styles.lower}>
         <Text style={styles.label}>Date</Text>
         <Pressable
@@ -280,6 +271,15 @@ export function OperationFormScreen({ navigation, route }: Props) {
           ))}
         </View>
       </View>
+
+      <Pressable
+        style={[styles.saveBtn, { backgroundColor: ctaColor }, saving && { opacity: 0.6 }]}
+        onPress={onSave}
+        disabled={saving}
+        accessibilityRole="button"
+      >
+        <Text style={styles.saveText}>{ctaLabel}</Text>
+      </Pressable>
 
       {existing ? (
         <Pressable style={styles.deleteBtn} onPress={onDelete}>
