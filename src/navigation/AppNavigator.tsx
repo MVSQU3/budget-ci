@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MonthScreen } from '../screens/MonthScreen';
+import { OperationsScreen } from '../screens/OperationsScreen';
 import { OperationFormScreen } from '../screens/OperationFormScreen';
 import { AccountsScreen } from '../screens/AccountsScreen';
 import { CategoriesScreen } from '../screens/CategoriesScreen';
@@ -27,7 +28,12 @@ export function AppNavigator() {
         <Stack.Screen
           name="Mois"
           component={MonthScreen}
-          options={{ title: 'budget-ci' }}
+          options={{ title: 'Accueil', headerShown: false }}
+        />
+        <Stack.Screen
+          name="Operations"
+          component={OperationsScreen}
+          options={{ title: 'Opérations du mois' }}
         />
         <Stack.Screen
           name="OperationForm"
