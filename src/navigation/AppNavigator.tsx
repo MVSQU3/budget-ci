@@ -53,7 +53,7 @@ export function AppNavigator() {
         <Stack.Screen
           name="Plafonds"
           component={CeilingsScreen}
-          options={{ title: 'Plafonds du mois' }}
+          options={{ title: 'Budgets' }}
         />
         <Stack.Screen
           name="Synchronisation"
